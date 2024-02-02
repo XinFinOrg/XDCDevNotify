@@ -29,16 +29,20 @@ function sendNotification(article) {
 let previousArticles = [];
 
 // Scheduled task to check for new articles
-cron.schedule('*/1 * * * *', async () => { // Runs every 30 minutes
-  console.log('Checking for new articles...');
-  const latestArticles = await fetchLatestArticles();
-
-  const newArticles = latestArticles.filter(article => !previousArticles.includes(article.id));
-
-  if (newArticles.length > 0) {
-    newArticles.forEach(article => sendNotification(article));
-    previousArticles = latestArticles.map(article => article.id); // Update cache
-  }
-});
+cron.schedule('*/1 * * * *', async () => { // Runs every minute
+    console.log('Checking for new articles...');
+    const latestArticles = await fetchLatestArticles();
+  
+    // Limit to the first 10 articles
+    const firstTenArticles = latestArticles.slice(0, 10);
+  
+    const newArticles = firstTenArticles.filter(article => !previousArticles.includes(article.id));
+  
+    if (newArticles.length > 0) {
+      newArticles.forEach(article => sendNotification(article));
+      // Update cache with IDs from only the first 10 articles
+      previousArticles = firstTenArticles.map(article => article.id);
+    }
+  });
 
 console.log('Bot started...');
